@@ -1,0 +1,44 @@
+version: "3.7"
+
+services:
+  mydb:
+    image: mysql:5.7
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 1
+      MYSQL_USER: /run/secrets/MYSQL_USER
+      MYSQL_PASSWORD: /run/secrets/MYSQL_PASSWORD
+      MYSQL_DATABASE: wordpress
+    secrets:
+      - MYSQL_PASSWORD
+      - MYSQL_USER
+    networks:
+      - webnet
+
+  website:
+    image: wordpress:latest
+    depends_on: 
+      - mydb
+    deploy:
+      replicas: 3
+    ports:
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: mydb:3306
+      WORDPRESS_DB_USER: /run/secrets/MYSQL_USER
+      WORDPRESS_DB_PASSWORD: /run/secrets/MYSQL_PASSWORD
+      WORDPRESS_DB_NAME: wordpress
+    secrets:
+      - MYSQL_PASSWORD
+      - MYSQL_USER
+    networks:
+    - webnet
+
+secrets:
+  MYSQL_PASSWORD:
+    external: true
+  MYSQL_USER:
+    external: true
+
+networks:
+  webnet:
+    driver: overlay
